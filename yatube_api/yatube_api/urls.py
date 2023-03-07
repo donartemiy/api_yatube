@@ -3,6 +3,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from rest_framework.authtoken import views
+
 urlpatterns = [
     path('api/v1/', include('api.urls')),
     path('admin/', admin.site.urls),
