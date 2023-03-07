@@ -42,3 +42,12 @@ class CommentViewSet(ModelViewSet):
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
         serializer.save(author=self.request.user, post=Post.objects.get(pk=post_id))
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied('Изменение чужого контента запрещено!')
+        # super(PostViewSet, self).perform_update(serializer) # хренабора непонятная
+        serializer.save(author=self.request.user)
+
+    def perform_destroy(self, instance):
+        pass
