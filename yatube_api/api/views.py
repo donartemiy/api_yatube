@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from posts.models import Comment, Group, Post
+from posts.models import Comment, Group, Post, User
 from .serializers import CommentSerializer, GroupSerializer, PostSerializer
 from django.core.exceptions import PermissionDenied
 
@@ -11,7 +11,6 @@ class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
 
     def perform_create(self, serializer):
-        print('\n\n\nself.request.user:', self.request.user)
         serializer.save(author=self.request.user)
 
     def perform_update(self, serializer):
@@ -21,12 +20,19 @@ class PostViewSet(ModelViewSet):
         serializer.save(author=self.request.user)
 
     def perform_destroy(self, instance):
-        pass
+        if self.request.user != instance.author:
+            raise PermissionDenied('Изменение чужого контента запрещено!')
+        instance.delete()
 
 
 class GroupViewSet(ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+
+    def perform_create(self, serializer):
+        if not User.objects.get(username=self.request.user).is_superuser:
+            raise PermissionDenied('Изменение чужого контента запрещено!')
+        serializer.save()
 
 
 class CommentViewSet(ModelViewSet):
@@ -50,4 +56,7 @@ class CommentViewSet(ModelViewSet):
         serializer.save(author=self.request.user)
 
     def perform_destroy(self, instance):
-        pass
+        print('\n\n instance:', instance)
+        if self.request.user != instance.author:
+            raise PermissionDenied('Изменение чужого контента запрещено!')
+        instance.delete()
