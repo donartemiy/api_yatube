@@ -1,11 +1,10 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from posts.models import Comment, Group, Post, User
-from .serializers import CommentSerializer, GroupSerializer, PostSerializer
+from rest_framework.exceptions import MethodNotAllowed
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import MethodNotAllowed
+
+from posts.models import Comment, Group, Post, User
+from .serializers import CommentSerializer, GroupSerializer, PostSerializer
 
 
 class PostViewSet(ModelViewSet):
@@ -18,7 +17,6 @@ class PostViewSet(ModelViewSet):
     def perform_update(self, serializer):
         if serializer.instance.author != self.request.user:
             raise PermissionDenied('Изменение чужого контента запрещено!')
-        # super(PostViewSet, self).perform_update(serializer) хренабора непонятная
         serializer.save(author=self.request.user)
 
     def perform_destroy(self, instance):
@@ -34,7 +32,6 @@ class GroupViewSet(ModelViewSet):
     def perform_create(self, serializer):
         if not User.objects.get(username=self.request.user).is_superuser:
             raise MethodNotAllowed('Недостаточно прав для создания группы')
-            # raise PermissionDenied('Изменение чужого контента запрещено!')
         serializer.save()
 
 
@@ -50,12 +47,12 @@ class CommentViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
-        serializer.save(author=self.request.user, post=get_object_or_404(Post, pk=post_id))
+        serializer.save(
+            author=self.request.user, post=get_object_or_404(Post, pk=post_id))
 
     def perform_update(self, serializer):
         if serializer.instance.author != self.request.user:
             raise PermissionDenied('Изменение чужого контента запрещено!')
-        # super(PostViewSet, self).perform_update(serializer) # хренабора непонятная
         serializer.save(author=self.request.user)
 
     def perform_destroy(self, instance):
