@@ -46,7 +46,8 @@ class CommentViewSet(ModelViewSet):
     def get_queryset(self):
         """Что бы ссылки в urls заработали"""
         post_id = self.kwargs.get('post_id')
-        return Post.comments.filter(post=post_id)
+        return Comment.objects.filter(post=post_id)
+        # return Post.comments.filter(post=post_id) пробовал так, не выходит
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
