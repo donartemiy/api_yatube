@@ -1,31 +1,35 @@
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.exceptions import MethodNotAllowed
-from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-
 from posts.models import Comment, Group, Post, User
+from rest_framework import permissions
+from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
 from .serializers import CommentSerializer, GroupSerializer, PostSerializer
+
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Object-level permission to only allow owners of an object to edit it.
+    Assumes the model instance has an `owner` attribute.
+    """
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        return obj.author == request.user
 
 
 class PostViewSet(ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = (IsOwnerOrReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def perform_update(self, serializer):
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        serializer.save(author=self.request.user)
 
-    def perform_destroy(self, instance):
-        if self.request.user != instance.author:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        instance.delete()
-
-
-class GroupViewSet(ModelViewSet):
+class GroupViewSet(ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
@@ -36,26 +40,15 @@ class GroupViewSet(ModelViewSet):
 
 
 class CommentViewSet(ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = (IsOwnerOrReadOnly,)
 
     def get_queryset(self):
         """Что бы ссылки в urls заработали"""
         post_id = self.kwargs.get('post_id')
-        new_queryset = Comment.objects.filter(post=post_id)
-        return new_queryset
+        return Comment.objects.filter(post=post_id)
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
         serializer.save(
             author=self.request.user, post=get_object_or_404(Post, pk=post_id))
-
-    def perform_update(self, serializer):
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        serializer.save(author=self.request.user)
-
-    def perform_destroy(self, instance):
-        if self.request.user != instance.author:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        instance.delete()
