@@ -1,9 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.permissions import IsAuthenticated
 
-from posts.models import Comment, Group, Post, User
+from posts.models import Group, Post
 from .serializers import CommentSerializer, GroupSerializer, PostSerializer
 from .permissions import IsOwnerOrReadOnly
 
@@ -25,7 +24,7 @@ class GroupViewSet(ReadOnlyModelViewSet):
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
-    # если убрать, то тесты не проходят: 
+    # если убрать, то тесты не проходят:
     # TestCommentAPI::test_comment_change_by_not_author_with_valid_data[put]
     # TestCommentAPI::test_comment_change_by_not_author_with_valid_data[patch]
     # TestCommentAPI::test_comment_delete_by_author
