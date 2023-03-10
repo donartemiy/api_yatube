@@ -11,7 +11,7 @@ from .permissions import IsOwnerOrReadOnly
 class PostViewSet(ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -24,9 +24,8 @@ class GroupViewSet(ReadOnlyModelViewSet):
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsOwnerOrReadOnly,) # Эту строку тоже не убрать
-    # без нее не сдать работу, т.к. не проходят Pytest
-    # выпадает 3 ошибки: 
+    permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
+    # если убрать, то тесты не проходят: 
     # TestCommentAPI::test_comment_change_by_not_author_with_valid_data[put]
     # TestCommentAPI::test_comment_change_by_not_author_with_valid_data[patch]
     # TestCommentAPI::test_comment_delete_by_author
