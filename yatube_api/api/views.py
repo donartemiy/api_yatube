@@ -24,16 +24,11 @@ class GroupViewSet(ReadOnlyModelViewSet):
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
-    # если убрать, то тесты не проходят:
-    # TestCommentAPI::test_comment_change_by_not_author_with_valid_data[put]
-    # TestCommentAPI::test_comment_change_by_not_author_with_valid_data[patch]
-    # TestCommentAPI::test_comment_delete_by_author
 
     def get_queryset(self):
-        """Что бы ссылки в urls заработали"""
         post_id = self.kwargs.get('post_id')
         post = get_object_or_404(Post, pk=post_id)
-        return post.comments.all()
+        return post.comments
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
