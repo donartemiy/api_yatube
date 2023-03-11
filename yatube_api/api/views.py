@@ -26,6 +26,7 @@ class CommentViewSet(ModelViewSet):
     permission_classes = (IsOwnerOrReadOnly, IsAuthenticated)
 
     def get_queryset(self):
+        """Что бы ссылки в urls заработали"""
         post_id = self.kwargs.get('post_id')
         post = get_object_or_404(Post, pk=post_id)
         return post.comments
